@@ -7,3 +7,6 @@ data = pd.read_json('data.json')
 data.to_csv('data1.csv', index=False)
 
 data.head()
+
+
+#something 
