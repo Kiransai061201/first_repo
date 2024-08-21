@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from slack_sdk import WebClient
 from ibm_watson_machine_learning.foundation_models import Model
 from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
+from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_exception_type
 
 # Load environment variables
 load_dotenv()
@@ -39,6 +40,7 @@ model = Model(
 # Store the timestamps of all messages sent by the bot
 message_timestamps = []
 
+@retry(wait=wait_fixed(2), stop=stop_after_attempt(3))
 def get_watsonx_response(question):
     try:
         # Generate the prompt
@@ -56,7 +58,15 @@ Question:
         return response_text
     except Exception as e:
         print(f"Error generating response: {e}")
-        return "Sorry, I couldn't process your request."
+        raise  # Re-raise the exception to trigger the retry
+
+@retry(wait=wait_fixed(2), stop=stop_after_attempt(3))
+def delete_message(channel_id, ts):
+    try:
+        client.chat_delete(channel=channel_id, ts=ts)
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        raise  # Re-raise the exception to trigger the retry
 
 @app.event("app_mention")
 def handle_mention(event, say):
@@ -81,9 +91,11 @@ def delete_all_command(ack, body):
     ack()  # Acknowledge the command request
     if message_timestamps:
         for ts in message_timestamps:
-            client.chat_delete(channel=body['channel_id'], ts=ts)
+            delete_message(body['channel_id'], ts)
         message_timestamps = []
 
 if __name__ == "__main__":
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.start()
+
+#
