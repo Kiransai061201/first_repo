@@ -1,0 +1,7 @@
+slack_bolt
+requests
+python-dotenv
+langchain
+langchain-community
+langchain-ibm
+ibm-watsonx-ai
