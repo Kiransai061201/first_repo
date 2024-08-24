@@ -1,0 +1,49 @@
+{
+    "perTableStatus": [
+        {
+            "tableStatistics": {
+                "extractionStartTime": "May 3, 2024, 2:31:58 PM",
+                "extractionEndTime": "May 3, 2024, 2:32:13 PM",
+                "partitioningInfo": {
+                    "numberOfPartitions": 1,
+                    "numberOfCompletedPartitions": 1
+                }
+            },
+            "schemaMetadata": {
+                "originalTypeMappings": [
+                    {
+                        "columnName": "id",
+                        "originalType": "int",
+                        "expectedExportedType": "int32",
+                        "originalCharMaxLength": 0,
+                        "originalNumPrecision": 10,
+                        "originalDateTimePrecision": 0,
+                        "ordinalPosition": 1
+                    },
+                    {
+                        "columnName": "name",
+                        "originalType": "varchar",
+                        "expectedExportedType": "binary (UTF8)",
+                        "originalCharMaxLength": 255,
+                        "originalNumPrecision": 0,
+                        "originalCharsetName": "utf8mb4",
+                        "originalDateTimePrecision": 0,
+                        "ordinalPosition": 2
+                    },
+                    {
+                        "columnName": "age",
+                        "originalType": "int",
+                        "expectedExportedType": "int32",
+                        "originalCharMaxLength": 0,
+                        "originalNumPrecision": 10,
+                        "originalDateTimePrecision": 0,
+                        "ordinalPosition": 3
+                    }
+                ]
+            },
+            "status": "COMPLETE",
+            "sizeGB": 1.52587890625E-5,
+            "target": "database_demo.database_demo.sample"
+        }
+    ]
+}
