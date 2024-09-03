@@ -159,7 +159,21 @@ def handle_list_issues(ack, respond, command):
             for issue in issues:
                 issue_key = issue['key']
                 summary = issue['fields']['summary']
-                description = issue['fields'].get('description', {}).get('content', [{}])[0].get('content', [{}])[0].get('text', 'No description provided.')
+                
+                # Safely get the description
+                description = "No description provided."
+                if issue['fields'].get('description'):
+                    desc = issue['fields']['description']
+                    if isinstance(desc, dict) and 'content' in desc:
+                        for content in desc['content']:
+                            if content.get('type') == 'paragraph' and content.get('content'):
+                                for text in content['content']:
+                                    if text.get('type') == 'text':
+                                        description = text.get('text', 'No description provided.')
+                                        break
+                                if description != "No description provided.":
+                                    break
+                
                 status = issue['fields']['status']['name']
                 issue_list.append(f"{issue_key} - {summary}\nDescription: {description}\nStatus: {status}\n")
 
@@ -303,7 +317,18 @@ def handle_user_info(ack, respond, command):
     
     if response.status_code == 200:
         user_info = response.json()
-        user_details = f"User: {user_info['displayName']}\nEmail: {user_info['emailAddress']}\n"
+        user_details = f"User: {user_info.get('displayName', 'N/A')}\n"
+        
+        # Check if email address is available
+        if 'emailAddress' in user_info:
+            user_details += f"Email: {user_info['emailAddress']}\n"
+        else:
+            user_details += "Email: Not available\n"
+        
+        # Add more user details if available
+        user_details += f"Account ID: {user_info.get('accountId', 'N/A')}\n"
+        user_details += f"Active: {'Yes' if user_info.get('active', False) else 'No'}\n"
+        
         respond(user_details)
     else:
         respond(f"Failed to retrieve user information: {response.status_code} - {response.text}")
