@@ -443,3 +443,18 @@ def message_hello(message, say):
 if __name__ == "__main__":
     handler = SocketModeHandler(app, slack_app_token)
     handler.start()
+
+
+
+
+# /gatherreq Summary: Description
+# /gatherreq "Fix login bug": "There is an issue with the login button not working on mobile.
+# /listissues <JQL query>
+# /addcomment <ISSUE-KEY> Comment text
+# /addcomment ISSUE-123 "This issue needs urgent attention.
+# /assignissue <issue_key> <assignee_username>
+# /assignissue ISSUE-123 john.doe
+# /userinfo <account_id>
+# /report progress
+# /listusers
+
