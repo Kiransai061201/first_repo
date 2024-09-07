@@ -60,7 +60,6 @@ def delete_all_command(ack, body):
             client.chat_delete(channel=body['channel_id'], ts=ts)
         message_timestamps = []
 
-
 if __name__ == "__main__":
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.start()
