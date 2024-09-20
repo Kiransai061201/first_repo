@@ -1,0 +1,22 @@
+{
+    "exportTaskIdentifier": "export",
+    "sourceArn": "arn:aws:rds:us-east-1:671199506904:snapshot:snapsdatabase2",
+    "exportOnly": [],
+    "snapshotTime": "May 2, 2024, 12:17:14 PM",
+    "taskStartTime": "May 3, 2024, 2:30:49 PM",
+    "taskEndTime": "May 3, 2024, 2:33:26 PM",
+    "s3Bucket": "taggerbucket",
+    "s3Prefix": "rds-backup/",
+    "exportedFilesPath": "rds-backup/export",
+    "iamRoleArn": "arn:aws:iam::671199506904:role/service-role/rds-backup",
+    "kmsKeyId": "arn:aws:kms:us-east-1:671199506904:key/b7edee60-e123-4209-95ec-2bd8a2cba483",
+    "status": "COMPLETE",
+    "percentProgress": 100,
+    "totalExportedDataInGB": 1.52587890625E-5
+}
+
+
+{
+    "_comment": "This is a comment",
+    "storage": "0.015625 megabytes (MB)."
+}

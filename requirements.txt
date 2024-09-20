@@ -1,0 +1,12 @@
+slack_bolt
+requests
+python-dotenv
+langchain
+langchain-community
+langchain-ibm
+ibm-watsonx-ai
+pypdf
+chromadb
+langchain_groq
+langchain_google_genai
+faiss-cpu

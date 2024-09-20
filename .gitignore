@@ -1,0 +1,4 @@
+.env
+sharepoint_access.py
+sharepoint_requests.py
+confluence_access.py
