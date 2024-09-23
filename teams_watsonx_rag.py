@@ -142,8 +142,11 @@ class TeamsBot:
                     if error:
                         await turn_context.send_activity(f"Error: {error}")
                     else:
-                        file_list = "\n".join(f"{i+1}. {file}" for i, file in enumerate(files))
-                        await turn_context.send_activity(f"Files in SharePoint:\n\n{file_list}")
+                        if files:
+                            file_list = "\n".join(f"{i+1}. {file}" for i, file in enumerate(files))
+                            await turn_context.send_activity(f"PDF files in SharePoint Documents library (including nested folders):\n\n{file_list}")
+                        else:
+                            await turn_context.send_activity("No PDF files found in the SharePoint Documents library.")
                 elif text.startswith("/usedoc"):
                     doc_name = text[len("/usedoc"):].strip()
                     success, message = await self.download_and_process_sharepoint_pdf(doc_name)
@@ -198,9 +201,9 @@ class TeamsBot:
 
             drive_id = drive['id']
             
-            # Get file download URL
-            encoded_filename = quote(filename)
-            file_response = requests.get(f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/General/{encoded_filename}:/content", headers=headers, allow_redirects=False)
+            # Search for the file
+            search_url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/{filename}:/content"
+            file_response = requests.get(search_url, headers=headers, allow_redirects=False)
             
             if file_response.status_code == 302:  # Redirect response
                 download_url = file_response.headers['Location']
@@ -249,6 +252,42 @@ class TeamsBot:
                 "Accept": "application/json"
             }
 
+            async def get_files_recursive(session, folder_endpoint, current_path=""):
+                all_files = []
+                async with session.get(folder_endpoint, headers=headers) as response:
+                    if response.status == 200:
+                        folder_data = await response.json()
+                        for item in folder_data.get('value', []):
+                            item_name = item['name']
+                            item_path = f"{current_path}/{item_name}" if current_path else item_name
+
+                            if item.get('file') and item_name.lower().endswith('.pdf'):
+                                all_files.append(item_path)
+                            elif item.get('folder'):
+                                subfolder_endpoint = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item['id']}/children"
+                                subfolder_files = await get_files_recursive(session, subfolder_endpoint, item_path)
+                                all_files.extend(subfolder_files)
+                        
+                        next_link = folder_data.get('@odata.nextLink')
+                        while next_link:
+                            async with session.get(next_link, headers=headers) as next_response:
+                                if next_response.status == 200:
+                                    next_data = await next_response.json()
+                                    for item in next_data.get('value', []):
+                                        item_name = item['name']
+                                        item_path = f"{current_path}/{item_name}" if current_path else item_name
+
+                                        if item.get('file') and item_name.lower().endswith('.pdf'):
+                                            all_files.append(item_path)
+                                        elif item.get('folder'):
+                                            subfolder_endpoint = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item['id']}/children"
+                                            subfolder_files = await get_files_recursive(session, subfolder_endpoint, item_path)
+                                            all_files.extend(subfolder_files)
+                                    next_link = next_data.get('@odata.nextLink')
+                                else:
+                                    break
+                    return all_files
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(graph_endpoint, headers=headers) as response:
                     if response.status == 200:
@@ -263,17 +302,13 @@ class TeamsBot:
                                 if not drive:
                                     return None, f"Document library '{SHAREPOINT_DOCUMENT_LIBRARY}' not found"
                                 
+                                global drive_id
                                 drive_id = drive['id']
                                 
-                                general_folder_endpoint = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/General:/children"
-                                async with session.get(general_folder_endpoint, headers=headers) as files_response:
-                                    if files_response.status == 200:
-                                        files_data = await files_response.json()
-                                        file_names = [item["name"] for item in files_data["value"] if item.get("file") and item["name"].lower().endswith('.pdf')]
-                                        return file_names, None
-                                    else:
-                                        error_text = await files_response.text()
-                                        return None, f"Error accessing SharePoint General folder: {files_response.status} - {error_text}"
+                                root_folder_endpoint = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root/children"
+                                all_pdf_files = await get_files_recursive(session, root_folder_endpoint)
+                                
+                                return all_pdf_files, None
                             else:
                                 error_text = await drives_response.text()
                                 return None, f"Error accessing SharePoint drives: {drives_response.status} - {error_text}"

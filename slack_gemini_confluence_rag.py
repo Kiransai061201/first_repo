@@ -48,6 +48,8 @@ prompt = ChatPromptTemplate.from_template(
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 vectors = None
 current_page = None
+global current_document
+current_document = None
 
 confluence = Confluence(
     url=CONFLUENCE_BASE_URL,
@@ -296,6 +298,10 @@ def handle_listdocs_command(ack, respond):
         else:
             respond("No pages found in the specified Confluence space.")
 
+@app.event("message")
+def handle_message_events(body, logger):
+    logger.info(body)
+
 @app.command("/usedoc")
 def handle_usedoc_command(ack, respond, command):
     ack()
@@ -324,6 +330,7 @@ def handle_listpdfs_command(ack, respond):
 @app.command("/askdoc")
 def handle_askdoc_command(ack, respond, command):
     ack()
+    global current_document
     if current_document:
         question = command["text"]
         answer = get_answer(question)
